@@ -17,7 +17,7 @@ dependencies {
   compile      project(':providers:denominator-ultradns')
   compile      project(':providers:denominator-route53')
   // to quiet error messages, not as we are using it
-  compile     'org.slf4j:slf4j-jdk14:1.7.2'
+  // compile     'org.slf4j:slf4j-jdk14:1.7.2'
   compile     'io.airlift:airline:0.5'
 }
 
@@ -71,10 +71,10 @@ task fat(dependsOn: classes, type: Jar) {
     def srcFile = new File("${destinationDir}/${archiveName}")
     def tmpFile = new File(srcFile.getAbsolutePath() + ".tmp")
     tmpFile.delete()
-    tmpFile << "#!/usr/bin/env sh\n"
-    tmpFile << 'exec java -jar $0 "$@"' + "\n"
+    // tmpFile << "#!/usr/bin/env sh\n"
+    // tmpFile << 'exec java -jar $0 "$@"' + "\n"
     tmpFile << srcFile.bytes
-    tmpFile.setExecutable(true, true)
+    // tmpFile.setExecutable(true, true)
     tmpFile.renameTo(srcFile)
   }
 }
