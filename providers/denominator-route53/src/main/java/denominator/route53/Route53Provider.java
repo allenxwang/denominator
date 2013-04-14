@@ -28,8 +28,9 @@ import denominator.DNSApiManager;
 import denominator.Provider;
 import denominator.ResourceRecordSetApi;
 import denominator.ZoneApi;
+import denominator.config.GeoUnsupported;
 
-@Module(entryPoints = DNSApiManager.class)
+@Module(entryPoints = DNSApiManager.class, includes = GeoUnsupported.class)
 public class Route53Provider extends Provider {
 
     @Provides
