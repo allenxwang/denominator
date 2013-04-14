@@ -139,5 +139,4 @@ abstract class BaseProviderLiveTest {
     protected ResourceRecordSetApi rrsApi(String zoneName) {
         return manager.getApi().getResourceRecordSetApiForZone(zoneName);
     }
-
 }

@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.Map;
 
+import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 
 import denominator.model.rdata.AAAAData;
@@ -117,6 +118,104 @@ public class ResourceRecordSets {
         @Override
         public String toString() {
             return "containsRData(" + rdata + ")";
+        }
+    }
+
+    /**
+     * returns true if the input is not null and
+     * {@link ResourceRecordSet#getConfig() config} is empty.
+     */
+    public static Predicate<ResourceRecordSet<?>> withoutConfig() {
+        return WithoutConfig.INSTANCE;
+    }
+
+    private static enum WithoutConfig implements Predicate<ResourceRecordSet<?>> {
+
+        INSTANCE;
+
+        @Override
+        public boolean apply(ResourceRecordSet<?> input) {
+            return input != null && input.getConfig().isEmpty();
+        }
+
+        @Override
+        public String toString() {
+            return "WithoutConfig()";
+        }
+    }
+
+    /**
+     * returns true if {@link ResourceRecordSet#getConfig() config} contains a
+     * value is assignable from {@code configType}.
+     * 
+     * @param configType
+     *            expected type of configuration
+     */
+    public static Predicate<ResourceRecordSet<?>> configContainsType(Class<?> configType) {
+        return new ConfigContainsTypeToPredicate(configType);
+    }
+
+    private static final class ConfigContainsTypeToPredicate implements Predicate<ResourceRecordSet<?>> {
+        private final Class<?> configType;
+
+        private ConfigContainsTypeToPredicate(Class<?> configType) {
+            this.configType = checkNotNull(configType, "configType");
+        }
+
+        @Override
+        public boolean apply(ResourceRecordSet<?> input) {
+            if (input == null)
+                return false;
+            if (input.getConfig().isEmpty())
+                return false;
+            for (Map<String, Object> config : input.getConfig()) {
+                if (configType.isAssignableFrom(config.getClass()))
+                    return true;
+            }
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return "ConfigContainsTypeTo(" + configType + ")";
+        }
+    }
+
+    /**
+     * returns value of {@link ResourceRecordSet#getConfig() config},
+     * if matches the input {@code configType} and is not null;
+     * 
+     * @param configType
+     *            expected type of configuration
+     */
+    public static <C extends Map<String, Object>> Function<ResourceRecordSet<?>, C> toConfig(
+            Class<C> configType) {
+        return new ToConfigFunction<C>(configType);
+    }
+
+    private static final class ToConfigFunction<C> implements Function<ResourceRecordSet<?>, C> {
+        private final Class<C> configType;
+
+        private ToConfigFunction(Class<C> configType) {
+            this.configType = checkNotNull(configType, "configType");
+        }
+
+        @Override
+        public C apply(ResourceRecordSet<?> input) {
+            if (input == null)
+                return null;
+            if (input.getConfig().isEmpty())
+                return null;
+            for (Map<String, Object> config : input.getConfig()) {
+                if (configType.isAssignableFrom(config.getClass()))
+                    return configType.cast(config);
+            }
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return "ToConfig(" + configType + ")";
         }
     }
 
