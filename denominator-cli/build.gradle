@@ -11,6 +11,12 @@ eclipse {
   }
 }
 
+repositories {
+  maven {
+    url 'https://oss.sonatype.org/content/repositories/snapshots/'
+  }
+}
+
 dependencies {
   compile      project(':denominator-core')
   compile      project(':providers:denominator-dynect')
