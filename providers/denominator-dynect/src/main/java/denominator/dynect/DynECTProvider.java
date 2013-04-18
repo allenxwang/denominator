@@ -22,13 +22,15 @@ import com.google.common.collect.Multimap;
 import dagger.Module;
 import dagger.Provides;
 import denominator.CredentialsConfiguration.CredentialsAsList;
+import denominator.config.ConcatNormalAndGeoResourceRecordSets;
 import denominator.DNSApiManager;
 import denominator.Provider;
 import denominator.ResourceRecordSetApi;
 import denominator.ZoneApi;
-import denominator.config.GeoUnsupported;
 
-@Module(entryPoints = DNSApiManager.class, includes = GeoUnsupported.class)
+@Module(entryPoints = DNSApiManager.class, 
+           includes = { DynECTGeoSupport.class, 
+                        ConcatNormalAndGeoResourceRecordSets.class })
 public class DynECTProvider extends Provider {
 
     @Provides
