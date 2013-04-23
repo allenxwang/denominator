@@ -47,7 +47,7 @@ public abstract class BaseReadOnlyLiveTest extends BaseProviderLiveTest {
                 checkRRS(rrs);
                 Optional<ResourceRecordSet<?>> byNameAndType = rrsApi(zoneName).getByNameAndType(rrs.getName(), rrs.getType());
                 assertTrue(byNameAndType.isPresent(), "could not lookup by name and type: " + rrs);
-                assertEquals(rrsApi(zoneName).getByNameAndType(rrs.getName(), rrs.getType()).get(), rrs);
+                assertEquals(byNameAndType.get(), rrs);
             }
         }
         logRecordSummary();

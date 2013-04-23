@@ -14,6 +14,7 @@ import dagger.Module;
 import dagger.Provides;
 import denominator.Credentials.AnonymousCredentials;
 import denominator.Credentials.ListCredentials;
+import denominator.config.GeoUnsupported;
 import denominator.config.NothingToClose;
 import denominator.mock.MockResourceRecordSetApi;
 import denominator.mock.MockZoneApi;
@@ -27,7 +28,7 @@ public class CredentialsTest {
         assertEquals(ListCredentials.from("user", "pass").hashCode(), ListCredentials.from("user", "pass").hashCode());
     }
 
-    @Module(entryPoints = DNSApiManager.class, includes = NothingToClose.class)
+    @Module(entryPoints = DNSApiManager.class, includes = { NothingToClose.class, GeoUnsupported.class })
     static final class OptionalProvider extends Provider {
         @Provides
         protected Provider provideThis() {
@@ -57,7 +58,7 @@ public class CredentialsTest {
         }
     }
 
-    @Module(entryPoints = DNSApiManager.class, includes = NothingToClose.class)
+    @Module(entryPoints = DNSApiManager.class, includes = { NothingToClose.class, GeoUnsupported.class })
     static final class TwoPartProvider extends Provider {
         @Provides
         protected Provider provideThis() {
@@ -88,7 +89,7 @@ public class CredentialsTest {
         }
     }
 
-    @Module(entryPoints = DNSApiManager.class, includes = NothingToClose.class)
+    @Module(entryPoints = DNSApiManager.class, includes = { NothingToClose.class, GeoUnsupported.class })
     static final class ThreePartProvider extends Provider {
         @Provides
         protected Provider provideThis() {
@@ -119,7 +120,7 @@ public class CredentialsTest {
         }
     }
 
-    @Module(entryPoints = DNSApiManager.class, includes = NothingToClose.class)
+    @Module(entryPoints = DNSApiManager.class, includes = { NothingToClose.class, GeoUnsupported.class })
     static final class MultiPartProvider extends Provider {
         @Provides
         protected Provider provideThis() {

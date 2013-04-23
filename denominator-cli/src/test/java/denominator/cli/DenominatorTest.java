@@ -11,6 +11,8 @@ import denominator.DNSApiManager;
 import denominator.Provider;
 import denominator.cli.Denominator.ListProviders;
 import denominator.cli.Denominator.ZoneList;
+import denominator.cli.GeoResourceRecordSetCommands.GeoResourceRecordSetGet;
+import denominator.cli.GeoResourceRecordSetCommands.GeoResourceRecordSetList;
 import denominator.cli.ResourceRecordSetCommands.ResourceRecordSetAdd;
 import denominator.cli.ResourceRecordSetCommands.ResourceRecordSetApplyTTL;
 import denominator.cli.ResourceRecordSetCommands.ResourceRecordSetDelete;
@@ -171,5 +173,61 @@ public class DenominatorTest {
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
                 ";; in zone denominator.io. deleting rrset www3.denominator.io. A",
                 ";; ok"));
+    }
+
+    @Test(description = "denominator -p mock geo -z denominator.io. list")
+    public void testGeoResourceRecordSetList() {
+        GeoResourceRecordSetList command = new GeoResourceRecordSetList();
+        command.zoneName = "denominator.io.";
+        assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
+                // TODO: missing no-answer section.. perhaps name it NO_ANSWER?
+                " antarctica [Bouvet Island, French Southern Territories, Antarctica]",
+                "www.geo.denominator.io.                           CNAME  300   a.denominator.io. alazona [Alaska, Arizona]",
+                "www.geo.denominator.io.                           CNAME  86400 b.denominator.io. columbador [Colombia, Ecuador]",
+                "www2.geo.denominator.io.                          A      300   1.1.1.1 alazona [Alaska, Arizona]"));
+    }
+
+    @Test(description = "denominator -p mock geo -z denominator.io. list -n www.geo.denominator.io.")
+    public void testGeoResourceRecordSetListByName() {
+        GeoResourceRecordSetList command = new GeoResourceRecordSetList();
+        command.zoneName = "denominator.io.";
+        command.name = "www.geo.denominator.io.";
+        assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
+                " antarctica [Bouvet Island, French Southern Territories, Antarctica]",
+                "www.geo.denominator.io.                           CNAME  300   a.denominator.io. alazona [Alaska, Arizona]",
+                "www.geo.denominator.io.                           CNAME  86400 b.denominator.io. columbador [Colombia, Ecuador]"));
+    }
+
+    @Test(description = "denominator -p mock geo -z denominator.io. list -n www.geo.denominator.io. -t CNAME")
+    public void testGeoResourceRecordSetListByNameAndType() {
+        GeoResourceRecordSetList command = new GeoResourceRecordSetList();
+        command.zoneName = "denominator.io.";
+        command.name = "www.geo.denominator.io.";
+        command.type = "CNAME";
+        assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
+                " antarctica [Bouvet Island, French Southern Territories, Antarctica]",
+                "www.geo.denominator.io.                           CNAME  300   a.denominator.io. alazona [Alaska, Arizona]",
+                "www.geo.denominator.io.                           CNAME  86400 b.denominator.io. columbador [Colombia, Ecuador]"));
+    }
+
+    @Test(description = "denominator -p mock geo -z denominator.io. get -n www.geo.denominator.io. -t CNAME -g alazona")
+    public void testGeoResourceRecordSetGetWhenPresent() {
+        GeoResourceRecordSetGet command = new GeoResourceRecordSetGet();
+        command.zoneName = "denominator.io.";
+        command.name = "www.geo.denominator.io.";
+        command.type = "CNAME";
+        command.group = "alazona";
+        assertEquals(Joiner.on('\n').join(command.doRun(mgr)),
+                "www.geo.denominator.io.                           CNAME  300   a.denominator.io. alazona [Alaska, Arizona]");
+    }
+
+    @Test(description = "denominator -p mock geo -z denominator.io. get -n www.geo.denominator.io. -t A -g alazona")
+    public void testGeoResourceRecordSetGetWhenAbsent() {
+        GeoResourceRecordSetGet command = new GeoResourceRecordSetGet();
+        command.zoneName = "denominator.io.";
+        command.name = "www.geo.denominator.io.";
+        command.type = "A";
+        command.group = "alazona";
+        assertEquals(Joiner.on('\n').join(command.doRun(mgr)), "");
     }
 }
