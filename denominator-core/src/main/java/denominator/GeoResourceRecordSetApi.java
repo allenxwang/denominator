@@ -2,11 +2,13 @@ package denominator;
 
 import com.google.common.base.Optional;
 
-import denominator.model.Geo;
 import denominator.model.ResourceRecordSet;
-import denominator.model.ResourceRecordSetWithConfig;
+import denominator.model.config.Geo;
 
-public interface GeoResourceRecordSetApi extends ResourceRecordSetWithConfigApi<Geo> {
+/**
+ * list operations are filtered to only include those which are geo record sets.
+ */
+public interface GeoResourceRecordSetApi extends ReadOnlyResourceRecordSetApi {
 
     /**
      * retrieve a resource record set by name, type, and geo group
@@ -23,7 +25,7 @@ public interface GeoResourceRecordSetApi extends ResourceRecordSetWithConfigApi<
      * @throws IllegalArgumentException
      *             if the {@code zoneName} is not found.
      */
-    Optional<ResourceRecordSetWithConfig<?>> getByNameTypeAndGroup(String name, String type, String group);
+    Optional<ResourceRecordSet<?>> getByNameTypeAndGroup(String name, String type, String group);
 
     static interface Factory {
         Optional<GeoResourceRecordSetApi> create(String zoneName);

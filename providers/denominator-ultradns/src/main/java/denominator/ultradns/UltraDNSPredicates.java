@@ -5,9 +5,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import java.io.Serializable;
 
 import org.jclouds.ultradns.ws.domain.DirectionalPool;
-import org.jclouds.ultradns.ws.domain.DirectionalRecordDetail;
+import org.jclouds.ultradns.ws.domain.DirectionalPoolRecordDetail;
 import org.jclouds.ultradns.ws.domain.ResourceRecord;
-import org.jclouds.ultradns.ws.domain.ResourceRecordMetadata;
+import org.jclouds.ultradns.ws.domain.ResourceRecordDetail;
 import org.jclouds.ultradns.ws.domain.RoundRobinPool;
 import org.jclouds.ultradns.ws.domain.DirectionalPool.Type;
 
@@ -38,16 +38,16 @@ final class UltraDNSPredicates {
         private static final long serialVersionUID = 0;
     }
 
-    public static Predicate<DirectionalRecordDetail> isGeolocationRecord() {
+    public static Predicate<DirectionalPoolRecordDetail> isGeolocationRecord() {
         return GeolocationGroupPresentPredicate.INSTANCE;
     }
 
     /** @see UltraDNSPredicates#isGeolocationRecord() */
-    private static enum GeolocationGroupPresentPredicate implements Predicate<DirectionalRecordDetail>, Serializable {
+    private static enum GeolocationGroupPresentPredicate implements Predicate<DirectionalPoolRecordDetail>, Serializable {
         INSTANCE;
 
         @Override
-        public boolean apply(DirectionalRecordDetail in) {
+        public boolean apply(DirectionalPoolRecordDetail in) {
             return in.getGeolocationGroup().isPresent();
         }
 
@@ -84,12 +84,12 @@ final class UltraDNSPredicates {
         private static final long serialVersionUID = 0;
     }
 
-    public static Predicate<ResourceRecordMetadata> recordGuidEqualTo(String guid) {
+    public static Predicate<ResourceRecordDetail> recordGuidEqualTo(String guid) {
         return new RecordGuidEqualToPredicate(guid);
     }
 
     /** @see UltraDNSPredicates#resourceTypeEqualTo(int) */
-    private static class RecordGuidEqualToPredicate implements Predicate<ResourceRecordMetadata>, Serializable {
+    private static class RecordGuidEqualToPredicate implements Predicate<ResourceRecordDetail>, Serializable {
         private final String guid;
 
         private RecordGuidEqualToPredicate(String guid) {
@@ -97,7 +97,7 @@ final class UltraDNSPredicates {
         }
 
         @Override
-        public boolean apply(ResourceRecordMetadata in) {
+        public boolean apply(ResourceRecordDetail in) {
             return guid.equals(in.getGuid());
         }
 

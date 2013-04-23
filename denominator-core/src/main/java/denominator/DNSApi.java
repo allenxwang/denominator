@@ -10,12 +10,16 @@ import com.google.common.base.Optional;
 public class DNSApi {
     private final ZoneApi zoneApi;
     private final ResourceRecordSetApi.Factory rrsetApiFactory;
+    private final ReadOnlyResourceRecordSetApi.Factory rrsetWithConfigApiFactory;
     private final GeoResourceRecordSetApi.Factory geoApiFactory;
 
     @Inject
-    DNSApi(ZoneApi zoneApi, ResourceRecordSetApi.Factory rrsetApiFactory, GeoResourceRecordSetApi.Factory geoApiFactory) {
+    DNSApi(ZoneApi zoneApi, ResourceRecordSetApi.Factory rrsetApiFactory,
+            ReadOnlyResourceRecordSetApi.Factory rrsetWithConfigApiFactory,
+            GeoResourceRecordSetApi.Factory geoApiFactory) {
         this.zoneApi = zoneApi;
         this.rrsetApiFactory = rrsetApiFactory;
+        this.rrsetWithConfigApiFactory = rrsetWithConfigApiFactory;
         this.geoApiFactory = geoApiFactory;
     }
 
@@ -32,6 +36,13 @@ public class DNSApi {
      */
     public ResourceRecordSetApi getResourceRecordSetApiForZone(String zoneName) {
         return rrsetApiFactory.create(zoneName);
+    }
+
+    /**
+     * allows you to list all resource record sets regardless of their configuration.
+     */
+    public ReadOnlyResourceRecordSetApi getReadOnlyResourceRecordSetApiForZone(String zoneName) {
+        return rrsetWithConfigApiFactory.create(zoneName);
     }
 
     /**

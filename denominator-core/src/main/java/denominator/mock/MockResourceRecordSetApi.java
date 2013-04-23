@@ -7,9 +7,11 @@ import static com.google.common.base.Predicates.in;
 import static com.google.common.base.Predicates.not;
 import static com.google.common.collect.FluentIterable.from;
 import static com.google.common.collect.Iterables.filter;
+import static com.google.common.collect.Multimaps.filterValues;
 import static com.google.common.collect.Ordering.usingToString;
 import static denominator.model.ResourceRecordSets.nameEqualTo;
 import static denominator.model.ResourceRecordSets.typeEqualTo;
+import static denominator.model.ResourceRecordSets.withoutConfig;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -26,23 +28,6 @@ import denominator.model.ResourceRecordSet.Builder;
 
 
 public final class MockResourceRecordSetApi implements denominator.ResourceRecordSetApi {
-    public static final class Factory implements denominator.ResourceRecordSetApi.Factory {
-
-        private final Multimap<String, ResourceRecordSet<?>> data;
-
-        // wildcard types are not currently injectable in dagger
-        @SuppressWarnings({ "rawtypes", "unchecked" })
-        @Inject
-        Factory(Multimap<String, ResourceRecordSet> data) {
-            this.data = Multimap.class.cast(data);
-        }
-
-        @Override
-        public ResourceRecordSetApi create(String zoneName) {
-            checkArgument(data.keySet().contains(zoneName), "zone %s not found", zoneName);
-            return new MockResourceRecordSetApi(data, zoneName);
-        }
-    }
 
     private final Multimap<String, ResourceRecordSet<?>> data;
     private final String zoneName;
@@ -140,6 +125,24 @@ public final class MockResourceRecordSetApi implements denominator.ResourceRecor
         Optional<ResourceRecordSet<?>> rrsMatch = getByNameAndType(name, type);
         if (rrsMatch.isPresent()) {
             data.remove(zoneName, rrsMatch.get());
+        }
+    }
+
+    public static final class Factory implements denominator.ResourceRecordSetApi.Factory {
+
+        private final Multimap<String, ResourceRecordSet<?>> data;
+
+        // wildcard types are not currently injectable in dagger
+        @SuppressWarnings({ "rawtypes", "unchecked" })
+        @Inject
+        Factory(Multimap<String, ResourceRecordSet> data) {
+            this.data = Multimap.class.cast(filterValues(Multimap.class.cast(data), withoutConfig()));
+        }
+
+        @Override
+        public ResourceRecordSetApi create(String zoneName) {
+            checkArgument(data.keySet().contains(zoneName), "zone %s not found", zoneName);
+            return new MockResourceRecordSetApi(data, zoneName);
         }
     }
 }

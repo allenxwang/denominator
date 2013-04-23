@@ -15,6 +15,7 @@ import dagger.ObjectGraph;
 import dagger.Provides;
 import denominator.config.GeoUnsupported;
 import denominator.config.NothingToClose;
+import denominator.config.OnlyNormalResourceRecordSets;
 import denominator.mock.MockResourceRecordSetApi;
 import denominator.mock.MockZoneApi;
 import denominator.model.ResourceRecordSet;
@@ -69,7 +70,9 @@ public class ProviderTest {
     }
 
     @Module(entryPoints = { Accessor.class, DNSApiManager.class }, 
-            includes = { NothingToClose.class, GeoUnsupported.class })
+               includes = { NothingToClose.class,
+                            GeoUnsupported.class,
+                            OnlyNormalResourceRecordSets.class } )
     static class BareProvider extends Provider {
         @Provides
         protected Provider provideThis() {
@@ -117,7 +120,10 @@ public class ProviderTest {
         assertEquals(accessor.provider, provider);
     }
 
-    @Module(entryPoints = DNSApiManager.class, includes = { NothingToClose.class, GeoUnsupported.class })
+    @Module(entryPoints = DNSApiManager.class,
+               includes = { NothingToClose.class,
+                            GeoUnsupported.class,
+                            OnlyNormalResourceRecordSets.class } )
     static class ValidCredentialParametersProvider extends Provider {
         @Provides
         protected Provider provideThis() {
@@ -154,7 +160,10 @@ public class ProviderTest {
         new ValidCredentialParametersProvider();
     }
 
-    @Module(entryPoints = DNSApiManager.class, includes = { NothingToClose.class, GeoUnsupported.class })
+    @Module(entryPoints = DNSApiManager.class,
+               includes = { NothingToClose.class,
+                            GeoUnsupported.class,
+                            OnlyNormalResourceRecordSets.class } )
     static class InvalidCredentialKeyProvider extends Provider {
         @Provides
         protected Provider provideThis() {
@@ -192,7 +201,10 @@ public class ProviderTest {
         new InvalidCredentialKeyProvider();
     }
 
-    @Module(entryPoints = DNSApiManager.class, includes = { NothingToClose.class, GeoUnsupported.class })
+    @Module(entryPoints = DNSApiManager.class,
+             includes = { NothingToClose.class,
+                          GeoUnsupported.class,
+                          OnlyNormalResourceRecordSets.class } )
     static class InvalidCredentialParameterProvider extends Provider {
         @Provides
         protected Provider provideThis() {

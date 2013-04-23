@@ -2,21 +2,28 @@ package denominator.model;
 
 import static denominator.model.ResourceRecordSets.a;
 import static denominator.model.ResourceRecordSets.cname;
+import static denominator.model.ResourceRecordSets.configContainsType;
 import static denominator.model.ResourceRecordSets.ns;
 import static denominator.model.ResourceRecordSets.ptr;
 import static denominator.model.ResourceRecordSets.spf;
+import static denominator.model.ResourceRecordSets.toConfig;
 import static denominator.model.ResourceRecordSets.txt;
+import static denominator.model.ResourceRecordSets.withoutConfig;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
+import java.util.Map;
+
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import com.google.common.collect.ForwardingMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
+import denominator.model.config.Geo;
 import denominator.model.rdata.AData;
 import denominator.model.rdata.CNAMEData;
 import denominator.model.rdata.NSData;
@@ -31,7 +38,7 @@ public class ResourceRecordSetsTest {
                                                      .name("www.denominator.io.")
                                                      .type("A")
                                                      .ttl(3600)
-                                                     .add(AData.create("1.1.1.1")).build();
+                                                     .add(AData.create("192.0.2.1")).build();
 
     public void nameEqualToReturnsFalseOnNull() {
         assertFalse(ResourceRecordSets.nameEqualTo(aRRS.getName()).apply(null));
@@ -62,34 +69,96 @@ public class ResourceRecordSetsTest {
     }
 
     public void containsRDataReturnsFalseWhenRDataDifferent() {
-        assertFalse(ResourceRecordSets.containsRData(AData.create("2.2.2.2")).apply(aRRS));
+        assertFalse(ResourceRecordSets.containsRData(AData.create("198.51.100.1")).apply(aRRS));
     }
 
     public void containsRDataReturnsTrueWhenRDataEqual() {
-        assertTrue(ResourceRecordSets.containsRData(AData.create("1.1.1.1")).apply(aRRS));
+        assertTrue(ResourceRecordSets.containsRData(AData.create("192.0.2.1")).apply(aRRS));
     }
 
     public void containsRDataReturnsTrueWhenRDataEqualButDifferentType() {
-        assertTrue(ResourceRecordSets.containsRData(ImmutableMap.of("address", "1.1.1.1")).apply(aRRS));
+        assertTrue(ResourceRecordSets.containsRData(ImmutableMap.of("address", "192.0.2.1")).apply(aRRS));
+    }
+
+    Geo geo = Geo.create("US-East", ImmutableList.of("US-MD", "US-VA"));
+
+    ResourceRecordSet<AData> geoRRS = ResourceRecordSet.<AData> builder()
+                                                       .name("www.denominator.io.")
+                                                       .type("A")
+                                                       .ttl(3600)
+                                                       .add(AData.create("1.1.1.1"))
+                                                       .addConfig(geo).build();
+
+    public void withoutConfigReturnsFalseOnNull() {
+        assertFalse(withoutConfig().apply(null));
+    }
+
+    public void withoutConfigReturnsFalseWhenConfigNotEmpty() {
+        assertFalse(withoutConfig().apply(geoRRS));
+    }
+
+    public void withoutConfigReturnsTrueWhenConfigEmpty() {
+        assertTrue(withoutConfig().apply(aRRS));
+    }
+
+    public void configContainsTypeReturnsFalseOnNull() {
+        assertFalse(configContainsType(Geo.class).apply(null));
+    }
+
+    public void configContainsTypeReturnsFalseOnDifferentType() {
+        assertFalse(configContainsType(String.class).apply(geoRRS));
+    }
+
+    public void configContainsTypeReturnsFalseOnAbsent() {
+        assertFalse(configContainsType(Geo.class).apply(aRRS));
+    }
+
+    public void configContainsTypeReturnsTrueOnSameType() {
+        assertTrue(configContainsType(Geo.class).apply(geoRRS));
+    }
+
+    public void toConfigReturnsNullOnNull() {
+        assertEquals(toConfig(Geo.class).apply(null), null);
+    }
+
+    static final class Foo extends ForwardingMap<String, Object> {
+
+        @Override
+        protected Map<String, Object> delegate() {
+            return null;
+        }
+
+    }
+
+    public void toConfigReturnsNullOnDifferentType() {
+        assertEquals(toConfig(Foo.class).apply(geoRRS), null);
+    }
+
+    public void toConfigReturnsNullOnAbsent() {
+        assertEquals(toConfig(Geo.class).apply(aRRS), null);
+    }
+
+    public void toConfigReturnsConfigOnSameType() {
+        assertEquals(toConfig(Geo.class).apply(geoRRS), geo);
     }
 
     @DataProvider(name = "a")
     public Object[][] createData() {
         Object[][] data = new Object[28][2];
-        data[0][0] = a("www.denominator.io.", "1.1.1.1");
+        data[0][0] = a("www.denominator.io.", "192.0.2.1");
         data[0][1] = ResourceRecordSet.<AData> builder()
                                       .name("www.denominator.io.")
                                       .type("A")
-                                      .add(AData.create("1.1.1.1")).build();
-        data[1][0] = a("www.denominator.io.", 3600, "1.1.1.1");
+                                      .add(AData.create("192.0.2.1")).build();
+        data[1][0] = a("www.denominator.io.", 3600, "192.0.2.1");
         data[1][1] = ResourceRecordSet.<AData> builder()
                                       .name("www.denominator.io.")
                                       .type("A")
                                       .ttl(3600)
-                                      .add(AData.create("1.1.1.1")).build();
-        data[2][0] = a("www.denominator.io.", ImmutableSet.of("1.1.1.1"));
+                                      .add(AData.create("192.0.2.1")).build();
+        data[2][0] = a("www.denominator.io.", ImmutableSet.of("192.0.2.1"));
         data[2][1] = data[0][1];
-        data[3][0] = a("www.denominator.io.", 3600, ImmutableSet.of("1.1.1.1"));
+        data[3][0] = a("www.denominator.io.", 3600, ImmutableSet.of("192.0.2.1"));
         data[3][1] = data[1][1];
         data[4][0] = cname("www.denominator.io.", "1234:ab00:ff00::6b14:abcd");
         data[4][1] = ResourceRecordSet.<CNAMEData> builder()

@@ -55,9 +55,9 @@ public class DenominatorTest {
                 "denominator.io.                                   NS     86400 ns1.denominator.io.",
                 "denominator.io.                                   SOA    3600  ns1.denominator.io. admin.denominator.io. 1 3600 600 604800 60",
                 "www.denominator.io.                               CNAME  3600  www1.denominator.io.",
-                "www1.denominator.io.                              A      3600  1.1.1.1",
-                "www1.denominator.io.                              A      3600  1.1.1.2",
-                "www2.denominator.io.                              A      3600  2.2.2.2"));
+                "www1.denominator.io.                              A      3600  192.0.2.1",
+                "www1.denominator.io.                              A      3600  192.0.2.2",
+                "www2.denominator.io.                              A      3600  198.51.100.1"));
     }
 
     @Test(description = "denominator -p mock record -z denominator.io. list -n www1.denominator.io.")
@@ -66,8 +66,8 @@ public class DenominatorTest {
         command.zoneName = "denominator.io.";
         command.name = "www1.denominator.io.";
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                "www1.denominator.io.                              A      3600  1.1.1.1",
-                "www1.denominator.io.                              A      3600  1.1.1.2"));
+                "www1.denominator.io.                              A      3600  192.0.2.1",
+                "www1.denominator.io.                              A      3600  192.0.2.2"));
     }
 
     @Test(description = "denominator -p mock record -z denominator.io. get -n www1.denominator.io. -t A ")
@@ -77,8 +77,8 @@ public class DenominatorTest {
         command.name = "www1.denominator.io.";
         command.type = "A";
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                "www1.denominator.io.                              A      3600  1.1.1.1",
-                "www1.denominator.io.                              A      3600  1.1.1.2"));
+                "www1.denominator.io.                              A      3600  192.0.2.1",
+                "www1.denominator.io.                              A      3600  192.0.2.2"));
     }
 
     @Test(description = "denominator -p mock record -z denominator.io. get -n www3.denominator.io. -t A ")
@@ -102,65 +102,65 @@ public class DenominatorTest {
                 ";; ok"));
     }
 
-    @Test(description = "denominator -p mock record -z denominator.io. add -n www1.denominator.io. -t A -d 1.1.1.1 -d 1.1.1.2")
+    @Test(description = "denominator -p mock record -z denominator.io. add -n www1.denominator.io. -t A -d 192.0.2.1 -d 192.0.2.2")
     public void testResourceRecordSetAdd() {
         ResourceRecordSetAdd command = new ResourceRecordSetAdd();
         command.zoneName = "denominator.io.";
         command.name = "www1.denominator.io.";
         command.type = "A";
-        command.values = ImmutableList.of("1.1.1.1", "1.1.1.2");
+        command.values = ImmutableList.of("192.0.2.1", "192.0.2.2");
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                ";; in zone denominator.io. adding to rrset www1.denominator.io. A values: [{address=1.1.1.1},{address=1.1.1.2}]",
+                ";; in zone denominator.io. adding to rrset www1.denominator.io. A values: [{address=192.0.2.1},{address=192.0.2.2}]",
                 ";; ok"));
     }
 
-    @Test(description = "denominator -p mock record -z denominator.io. add -n www1.denominator.io. -t A --ttl 3600 -d 1.1.1.1 -d 1.1.1.2")
+    @Test(description = "denominator -p mock record -z denominator.io. add -n www1.denominator.io. -t A --ttl 3600 -d 192.0.2.1 -d 192.0.2.2")
     public void testResourceRecordSetAddWithTTL() {
         ResourceRecordSetAdd command = new ResourceRecordSetAdd();
         command.zoneName = "denominator.io.";
         command.name = "www1.denominator.io.";
         command.type = "A";
         command.ttl = 3600;
-        command.values = ImmutableList.of("1.1.1.1", "1.1.1.2");
+        command.values = ImmutableList.of("192.0.2.1", "192.0.2.2");
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                ";; in zone denominator.io. adding to rrset www1.denominator.io. A values: [{address=1.1.1.1},{address=1.1.1.2}] applying ttl 3600",
+                ";; in zone denominator.io. adding to rrset www1.denominator.io. A values: [{address=192.0.2.1},{address=192.0.2.2}] applying ttl 3600",
                 ";; ok"));
     }
 
-    @Test(description = "denominator -p mock record -z denominator.io. replace -n www1.denominator.io. -t A -d 1.1.1.1 -d 1.1.1.2")
+    @Test(description = "denominator -p mock record -z denominator.io. replace -n www1.denominator.io. -t A -d 192.0.2.1 -d 192.0.2.2")
     public void testResourceRecordSetReplace() {
         ResourceRecordSetReplace command = new ResourceRecordSetReplace();
         command.zoneName = "denominator.io.";
         command.name = "www1.denominator.io.";
         command.type = "A";
-        command.values = ImmutableList.of("1.1.1.1", "1.1.1.2");
+        command.values = ImmutableList.of("192.0.2.1", "192.0.2.2");
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                ";; in zone denominator.io. replacing rrset www1.denominator.io. A with values: [{address=1.1.1.1},{address=1.1.1.2}]",
+                ";; in zone denominator.io. replacing rrset www1.denominator.io. A with values: [{address=192.0.2.1},{address=192.0.2.2}]",
                 ";; ok"));
     }
 
-    @Test(description = "denominator -p mock record -z denominator.io. replace -n www1.denominator.io. -t A --ttl 3600 -d 1.1.1.1 -d 1.1.1.2")
+    @Test(description = "denominator -p mock record -z denominator.io. replace -n www1.denominator.io. -t A --ttl 3600 -d 192.0.2.1 -d 192.0.2.2")
     public void testResourceRecordSetReplaceWithTTL() {
         ResourceRecordSetReplace command = new ResourceRecordSetReplace();
         command.zoneName = "denominator.io.";
         command.name = "www1.denominator.io.";
         command.type = "A";
         command.ttl = 3600;
-        command.values = ImmutableList.of("1.1.1.1", "1.1.1.2");
+        command.values = ImmutableList.of("192.0.2.1", "192.0.2.2");
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                ";; in zone denominator.io. replacing rrset www1.denominator.io. A with values: [{address=1.1.1.1},{address=1.1.1.2}] and ttl 3600",
+                ";; in zone denominator.io. replacing rrset www1.denominator.io. A with values: [{address=192.0.2.1},{address=192.0.2.2}] and ttl 3600",
                 ";; ok"));
     }
 
-    @Test(description = "denominator -p mock record -z denominator.io. remove -n www1.denominator.io. -t A -d 1.1.1.1 -d 1.1.1.2")
+    @Test(description = "denominator -p mock record -z denominator.io. remove -n www1.denominator.io. -t A -d 192.0.2.1 -d 192.0.2.2")
     public void testResourceRecordSetRemove() {
         ResourceRecordSetRemove command = new ResourceRecordSetRemove();
         command.zoneName = "denominator.io.";
         command.name = "www1.denominator.io.";
         command.type = "A";
-        command.values = ImmutableList.of("1.1.1.1", "1.1.1.2");
+        command.values = ImmutableList.of("192.0.2.1", "192.0.2.2");
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                ";; in zone denominator.io. removing from rrset www1.denominator.io. A values: [{address=1.1.1.1},{address=1.1.1.2}]",
+                ";; in zone denominator.io. removing from rrset www1.denominator.io. A values: [{address=192.0.2.1},{address=192.0.2.2}]",
                 ";; ok"));
     }
 
@@ -180,11 +180,10 @@ public class DenominatorTest {
         GeoResourceRecordSetList command = new GeoResourceRecordSetList();
         command.zoneName = "denominator.io.";
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                // TODO: missing no-answer section.. perhaps name it NO_ANSWER?
-                " antarctica [Bouvet Island, French Southern Territories, Antarctica]",
+                "www.geo.denominator.io.                           CNAME  0     c.denominator.io. antarctica [Bouvet Island, French Southern Territories, Antarctica]",
                 "www.geo.denominator.io.                           CNAME  300   a.denominator.io. alazona [Alaska, Arizona]",
                 "www.geo.denominator.io.                           CNAME  86400 b.denominator.io. columbador [Colombia, Ecuador]",
-                "www2.geo.denominator.io.                          A      300   1.1.1.1 alazona [Alaska, Arizona]"));
+                "www2.geo.denominator.io.                          A      300   192.0.2.1 alazona [Alaska, Arizona]"));
     }
 
     @Test(description = "denominator -p mock geo -z denominator.io. list -n www.geo.denominator.io.")
@@ -193,7 +192,7 @@ public class DenominatorTest {
         command.zoneName = "denominator.io.";
         command.name = "www.geo.denominator.io.";
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                " antarctica [Bouvet Island, French Southern Territories, Antarctica]",
+                "www.geo.denominator.io.                           CNAME  0     c.denominator.io. antarctica [Bouvet Island, French Southern Territories, Antarctica]",
                 "www.geo.denominator.io.                           CNAME  300   a.denominator.io. alazona [Alaska, Arizona]",
                 "www.geo.denominator.io.                           CNAME  86400 b.denominator.io. columbador [Colombia, Ecuador]"));
     }
@@ -205,7 +204,7 @@ public class DenominatorTest {
         command.name = "www.geo.denominator.io.";
         command.type = "CNAME";
         assertEquals(Joiner.on('\n').join(command.doRun(mgr)), Joiner.on('\n').join(
-                " antarctica [Bouvet Island, French Southern Territories, Antarctica]",
+                "www.geo.denominator.io.                           CNAME  0     c.denominator.io. antarctica [Bouvet Island, French Southern Territories, Antarctica]",
                 "www.geo.denominator.io.                           CNAME  300   a.denominator.io. alazona [Alaska, Arizona]",
                 "www.geo.denominator.io.                           CNAME  86400 b.denominator.io. columbador [Colombia, Ecuador]"));
     }

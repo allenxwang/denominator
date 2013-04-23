@@ -28,8 +28,11 @@ import denominator.DNSApiManager;
 import denominator.Provider;
 import denominator.ResourceRecordSetApi;
 import denominator.ZoneApi;
+import denominator.config.ConcatNormalAndGeoResourceRecordSets;
 
-@Module(entryPoints = DNSApiManager.class, includes = UltraDNSGeoSupport.class)
+@Module(entryPoints = DNSApiManager.class,
+           includes = { UltraDNSGeoSupport.class,
+                        ConcatNormalAndGeoResourceRecordSets.class })
 public class UltraDNSProvider extends Provider {
 
     @Provides

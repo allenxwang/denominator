@@ -31,6 +31,7 @@ import denominator.Credentials.ListCredentials;
 import denominator.CredentialsConfiguration.CredentialsAsList;
 import denominator.config.GeoUnsupported;
 import denominator.config.NothingToClose;
+import denominator.config.OnlyNormalResourceRecordSets;
 import denominator.mock.MockResourceRecordSetApi;
 import denominator.model.ResourceRecordSet;
 
@@ -82,8 +83,10 @@ public class DynamicCredentialsProviderExampleTest {
 
     // incomplete as it requires credentials to be bound externally
     @Module(entryPoints = DNSApiManager.class,
-            complete = false,
-            includes = { NothingToClose.class, GeoUnsupported.class } )
+               complete = false,
+               includes = { NothingToClose.class,
+                            GeoUnsupported.class,
+                            OnlyNormalResourceRecordSets.class } )
     static class DynamicCredentialsProvider extends Provider {
         @Provides
         protected Provider provideThis() {

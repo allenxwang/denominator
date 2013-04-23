@@ -2,7 +2,7 @@ package denominator.cli;
 
 import static com.google.common.collect.Iterators.forArray;
 import static com.google.common.collect.Iterators.transform;
-import static denominator.model.ResourceRecordSetWithConfigs.toConfig;
+import static denominator.model.ResourceRecordSets.toConfig;
 import io.airlift.command.Command;
 import io.airlift.command.Option;
 import io.airlift.command.OptionType;
@@ -19,8 +19,8 @@ import denominator.DNSApiManager;
 import denominator.GeoResourceRecordSetApi;
 import denominator.cli.Denominator.DenominatorCommand;
 import denominator.cli.ResourceRecordSetCommands.ResourceRecordSetToString;
-import denominator.model.Geo;
-import denominator.model.ResourceRecordSetWithConfig;
+import denominator.model.ResourceRecordSet;
+import denominator.model.config.Geo;
 
 class GeoResourceRecordSetCommands {
 
@@ -38,7 +38,7 @@ class GeoResourceRecordSetCommands {
         public String type;
 
         public Iterator<String> doRun(DNSApiManager mgr) {
-            Iterator<ResourceRecordSetWithConfig<?>> list;
+            Iterator<ResourceRecordSet<?>> list;
             if (name != null && type != null)
                 list = mgr.getApi().getGeoResourceRecordSetApiForZone(zoneName).get().listByNameAndType(name, type);
             if (name != null)
@@ -62,23 +62,21 @@ class GeoResourceRecordSetCommands {
 
         public Iterator<String> doRun(DNSApiManager mgr) {
             GeoResourceRecordSetApi api = mgr.getApi().getGeoResourceRecordSetApiForZone(zoneName).get();
-            Optional<ResourceRecordSetWithConfig<?>> result = api.getByNameTypeAndGroup(name, type, group);
+            Optional<ResourceRecordSet<?>> result = api.getByNameTypeAndGroup(name, type, group);
             return forArray(result.transform(GeoResourceRecordSetToString.INSTANCE).or(""));
         }
     }
 
-    static enum GeoResourceRecordSetToString implements Function<ResourceRecordSetWithConfig<?>, String> {
+    static enum GeoResourceRecordSetToString implements Function<ResourceRecordSet<?>, String> {
         INSTANCE;
 
         @Override
-        public String apply(ResourceRecordSetWithConfig<?> geoRRS) {
+        public String apply(ResourceRecordSet<?> geoRRS) {
             Geo geo = toConfig(Geo.class).apply(geoRRS);
             StringBuilder suffix = new StringBuilder().append(geo.getGroupName()).append(' ')
                     .append(geo.getTerritories());
-            // TODO: address no answer records
             ImmutableList.Builder<String> lines = ImmutableList.<String> builder();
-            for (String line : Splitter.on('\n').split(
-                    ResourceRecordSetToString.INSTANCE.apply(geoRRS.getResourceRecordSet()))) {
+            for (String line : Splitter.on('\n').split(ResourceRecordSetToString.INSTANCE.apply(geoRRS))) {
                 lines.add(new StringBuilder().append(line).append(' ').append(suffix).toString());
             }
             return Joiner.on('\n').join(lines.build());
