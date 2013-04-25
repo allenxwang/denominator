@@ -11,20 +11,13 @@ eclipse {
   }
 }
 
-repositories {
-  maven {
-    url 'https://oss.sonatype.org/content/repositories/snapshots/'
-  }
-}
-
 dependencies {
   compile      project(':denominator-core')
   compile      project(':providers:denominator-dynect')
   compile      project(':providers:denominator-ultradns')
   compile      project(':providers:denominator-route53')
-  compile      project(':providers:denominator-clouddns')
   // to quiet error messages, not as we are using it
-  // compile     'org.slf4j:slf4j-jdk14:1.7.2'
+  compile     'org.slf4j:slf4j-jdk14:1.7.2'
   compile     'io.airlift:airline:0.5'
 }
 
@@ -80,13 +73,13 @@ task fatJar(dependsOn: classes, type: Jar) {
     def srcFile = new File("${buildDir}/libs/${archiveName}")
     def shortcutFile = new File("${buildDir}/denominator")
     shortcutFile.delete()
-    // shortcutFile << "#!/usr/bin/env sh\n"
-    // shortcutFile << 'exec java -jar $0 "$@"' + "\n"
+    shortcutFile << "#!/usr/bin/env sh\n"
+    shortcutFile << 'exec java -jar $0 "$@"' + "\n"
     shortcutFile << srcFile.bytes
-    // shortcutFile.setExecutable(true, true)
+    shortcutFile.setExecutable(true, true)
     srcFile.delete()
     srcFile << shortcutFile.bytes   
-    // srcFile.setExecutable(true, true)
+    srcFile.setExecutable(true, true)
   }
 }
 
