@@ -12,6 +12,7 @@ import static org.jclouds.ultradns.ws.domain.DirectionalPool.RecordType.IPV6;
 
 import java.util.EnumSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -28,25 +29,41 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
 
-import denominator.GeoResourceRecordSetApi;
+import dagger.Lazy;
 import denominator.ResourceTypeToValue;
 import denominator.model.ResourceRecordSet;
+import denominator.profile.GeoResourceRecordSetApi;
 
-public final class UltraDNSGeoResourceRecordSetApi implements denominator.GeoResourceRecordSetApi {
+public final class UltraDNSGeoResourceRecordSetApi implements GeoResourceRecordSetApi {
 
+    private final Set<String> types;
+    private final Multimap<String, String> regions;
     private final DirectionalGroupApi groupApi;
     private final DirectionalPoolApi poolApi;
     private final GroupGeoRecordByNameTypeIterator.Factory iteratorFactory;
     private final String zoneName;
 
-    UltraDNSGeoResourceRecordSetApi(DirectionalGroupApi groupApi, DirectionalPoolApi poolApi,
-            GroupGeoRecordByNameTypeIterator.Factory iteratorFactory, String zoneName) {
+    UltraDNSGeoResourceRecordSetApi(Set<String> types, Multimap<String, String> regions, DirectionalGroupApi groupApi,
+            DirectionalPoolApi poolApi, GroupGeoRecordByNameTypeIterator.Factory iteratorFactory, String zoneName) {
+        this.types = types;
+        this.regions = regions;
         this.groupApi = groupApi;
         this.poolApi = poolApi;
         this.iteratorFactory = iteratorFactory;
         this.zoneName = zoneName;
+    }
+
+    @Override
+    public Set<String> getSupportedTypes() {
+        return types;
+    }
+
+    @Override
+    public Multimap<String, String> getSupportedRegions() {
+        return regions;
     }
 
     @Override
@@ -148,24 +165,31 @@ public final class UltraDNSGeoResourceRecordSetApi implements denominator.GeoRes
         }
     };
 
-    static final class Factory implements denominator.GeoResourceRecordSetApi.Factory {
+    static final class Factory implements GeoResourceRecordSetApi.Factory {
+        private final Set<String> types;
+        private final Lazy<Multimap<String, String>> regions;
         private final UltraDNSWSApi api;
         private final Supplier<IdAndName> account;
         private final GroupGeoRecordByNameTypeIterator.Factory iteratorFactory;
 
         @Inject
-        Factory(UltraDNSWSApi api, Supplier<IdAndName> account, GroupGeoRecordByNameTypeIterator.Factory iteratorFactory) {
+        Factory(@denominator.config.profile.Geo Set<String> types,
+                @denominator.config.profile.Geo Lazy<Multimap<String, String>> regions, UltraDNSWSApi api,
+                Supplier<IdAndName> account, GroupGeoRecordByNameTypeIterator.Factory iteratorFactory) {
+            this.types = types;
+            this.regions = regions;
             this.api = api;
             this.account = account;
             this.iteratorFactory = iteratorFactory;
         }
 
         @Override
-        public Optional<GeoResourceRecordSetApi> create(final String zoneName) {
+        public Optional<GeoResourceRecordSetApi> create(String zoneName) {
             checkNotNull(zoneName, "zoneName was null");
-            return Optional.<GeoResourceRecordSetApi> of(new UltraDNSGeoResourceRecordSetApi(api
-                    .getDirectionalGroupApiForAccount(account.get().getId()), api
-                    .getDirectionalPoolApiForZone(zoneName), iteratorFactory, zoneName));
+            return Optional.<GeoResourceRecordSetApi> of(
+                    new UltraDNSGeoResourceRecordSetApi(types, regions.get(), 
+                            api.getDirectionalGroupApiForAccount(account.get().getId()),
+                            api.getDirectionalPoolApiForZone(zoneName), iteratorFactory, zoneName));
         }
     }
 

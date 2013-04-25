@@ -7,7 +7,7 @@ import com.google.common.base.Optional;
 import dagger.Module;
 import dagger.Provides;
 import denominator.DNSApiManager;
-import denominator.GeoResourceRecordSetApi;
+import denominator.profile.GeoResourceRecordSetApi;
 
 /**
  * Some providers do not yet support directional DNS.

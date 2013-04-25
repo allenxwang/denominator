@@ -10,7 +10,7 @@ import com.google.common.collect.Iterators;
 import dagger.Module;
 import dagger.Provides;
 import denominator.DNSApiManager;
-import denominator.ReadOnlyResourceRecordSetApi;
+import denominator.AllProfileResourceRecordSetApi;
 import denominator.ResourceRecordSetApi;
 import denominator.model.ResourceRecordSet;
 
@@ -22,18 +22,18 @@ public class OnlyNormalResourceRecordSets {
 
     @Provides
     @Singleton
-    ReadOnlyResourceRecordSetApi.Factory provideResourceRecordSetApiFactory(final ResourceRecordSetApi.Factory factory) {
-        return new ReadOnlyResourceRecordSetApi.Factory() {
+    AllProfileResourceRecordSetApi.Factory provideResourceRecordSetApiFactory(final ResourceRecordSetApi.Factory factory) {
+        return new AllProfileResourceRecordSetApi.Factory() {
 
             @Override
-            public ReadOnlyResourceRecordSetApi create(String zoneName) {
+            public AllProfileResourceRecordSetApi create(String zoneName) {
                 return new OnlyNormalResourceRecordSetApi(factory.create(zoneName));
             }
 
         };
     }
 
-    private static class OnlyNormalResourceRecordSetApi implements ReadOnlyResourceRecordSetApi {
+    private static class OnlyNormalResourceRecordSetApi implements AllProfileResourceRecordSetApi {
         private final ResourceRecordSetApi api;
 
         private OnlyNormalResourceRecordSetApi(ResourceRecordSetApi api) {

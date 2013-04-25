@@ -7,7 +7,7 @@ import com.google.common.annotations.Beta;
 import denominator.model.ResourceRecordSet;
 
 @Beta
-public interface ReadOnlyResourceRecordSetApi {
+interface ReadOnlyResourceRecordSetApi {
 
     /**
      * a listing of all resource record sets inside the zone.
@@ -40,8 +40,4 @@ public interface ReadOnlyResourceRecordSetApi {
      *             if the {@code zoneName} is not found.
      */
     Iterator<ResourceRecordSet<?>> listByNameAndType(String name, String type);
-
-    static interface Factory {
-        ReadOnlyResourceRecordSetApi create(String zoneName);
-    }
 }

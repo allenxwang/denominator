@@ -2,31 +2,59 @@ package denominator.cli;
 
 import static com.google.common.collect.Iterators.forArray;
 import static com.google.common.collect.Iterators.transform;
-import static denominator.model.ResourceRecordSets.toConfig;
+import static denominator.model.ResourceRecordSets.toProfile;
+import static java.lang.String.format;
 import io.airlift.command.Command;
 import io.airlift.command.Option;
 import io.airlift.command.OptionType;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Splitter;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 
 import denominator.DNSApiManager;
-import denominator.GeoResourceRecordSetApi;
 import denominator.cli.Denominator.DenominatorCommand;
 import denominator.cli.ResourceRecordSetCommands.ResourceRecordSetToString;
 import denominator.model.ResourceRecordSet;
-import denominator.model.config.Geo;
+import denominator.model.profile.Geo;
+import denominator.profile.GeoResourceRecordSetApi;
 
 class GeoResourceRecordSetCommands {
 
     private static abstract class GeoResourceRecordSetCommand extends DenominatorCommand {
         @Option(type = OptionType.GROUP, required = true, name = { "-z", "--zone" }, description = "zone name to affect. ex. denominator.io.")
         public String zoneName;
+    }
+
+    @Command(name = "types", description = "Lists the record types that support geo profile in this zone")
+    public static class GeoTypeList extends GeoResourceRecordSetCommand {
+        @Override
+        protected Iterator<String> doRun(DNSApiManager mgr) {
+            return mgr.getApi().getGeoResourceRecordSetApiForZone(zoneName).get().getSupportedTypes().iterator();
+        }
+    }
+
+    @Command(name = "regions", description = "Lists the geo regions supported in this zone")
+    public static class GeoRegionList extends GeoResourceRecordSetCommand {
+        @Override
+        protected Iterator<String> doRun(DNSApiManager mgr) {
+            return FluentIterable
+                    .from(mgr.getApi().getGeoResourceRecordSetApiForZone(zoneName).get().getSupportedRegions().asMap()
+                            .entrySet()).transform(new Function<Map.Entry<String, Collection<String>>, String>() {
+                        @Override
+                        public String apply(Entry<String, Collection<String>> input) {
+                            return format("%-28s: %s", input.getKey(), Joiner.on(';').join(input.getValue()));
+                        }
+                    }).iterator();
+        }
     }
 
     @Command(name = "list", description = "Lists the geo record record sets present in this zone")
@@ -72,9 +100,9 @@ class GeoResourceRecordSetCommands {
 
         @Override
         public String apply(ResourceRecordSet<?> geoRRS) {
-            Geo geo = toConfig(Geo.class).apply(geoRRS);
-            StringBuilder suffix = new StringBuilder().append(geo.getGroupName()).append(' ')
-                    .append(geo.getTerritories());
+            Geo geo = toProfile(Geo.class).apply(geoRRS);
+            StringBuilder suffix = new StringBuilder().append(geo.getName()).append(' ')
+                    .append(geo.getRegions());
             ImmutableList.Builder<String> lines = ImmutableList.<String> builder();
             for (String line : Splitter.on('\n').split(ResourceRecordSetToString.INSTANCE.apply(geoRRS))) {
                 lines.add(new StringBuilder().append(line).append(' ').append(suffix).toString());

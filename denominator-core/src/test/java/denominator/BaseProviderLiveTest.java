@@ -38,7 +38,7 @@ import denominator.model.rdata.SSHFPData;
 /**
  * extend this and initialize manager {@link BeforeClass}
  */
-abstract class BaseProviderLiveTest {
+public abstract class BaseProviderLiveTest {
 
     protected Map<String, ResourceRecordSet<?>> stockRRSets() {
         String zoneName = skipIfNoMutableZone();

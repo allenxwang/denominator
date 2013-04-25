@@ -3,7 +3,7 @@ package denominator.ultradns;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import denominator.BaseGeoReadOnlyLiveTest;
+import denominator.profile.BaseGeoReadOnlyLiveTest;
 
 @Test
 public class UltraDNSGeoReadOnlyLiveTest extends BaseGeoReadOnlyLiveTest {

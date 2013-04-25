@@ -123,53 +123,53 @@ public class ResourceRecordSets {
 
     /**
      * returns true if the input is not null and
-     * {@link ResourceRecordSet#getConfig() config} is empty.
+     * {@link ResourceRecordSet#getProfiles() profile} is empty.
      */
-    public static Predicate<ResourceRecordSet<?>> withoutConfig() {
-        return WithoutConfig.INSTANCE;
+    public static Predicate<ResourceRecordSet<?>> withoutProfile() {
+        return WithoutProfile.INSTANCE;
     }
 
-    private static enum WithoutConfig implements Predicate<ResourceRecordSet<?>> {
+    private static enum WithoutProfile implements Predicate<ResourceRecordSet<?>> {
 
         INSTANCE;
 
         @Override
         public boolean apply(ResourceRecordSet<?> input) {
-            return input != null && input.getConfig().isEmpty();
+            return input != null && input.getProfiles().isEmpty();
         }
 
         @Override
         public String toString() {
-            return "WithoutConfig()";
+            return "WithoutProfile()";
         }
     }
 
     /**
-     * returns true if {@link ResourceRecordSet#getConfig() config} contains a
-     * value is assignable from {@code configType}.
+     * returns true if {@link ResourceRecordSet#getProfiles() profile} contains a
+     * value is assignable from {@code type}.
      * 
-     * @param configType
-     *            expected type of configuration
+     * @param type
+     *            expected type of the profile
      */
-    public static Predicate<ResourceRecordSet<?>> configContainsType(Class<?> configType) {
-        return new ConfigContainsTypeToPredicate(configType);
+    public static Predicate<ResourceRecordSet<?>> profileContainsType(Class<?> type) {
+        return new ProfileContainsTypeToPredicate(type);
     }
 
-    private static final class ConfigContainsTypeToPredicate implements Predicate<ResourceRecordSet<?>> {
-        private final Class<?> configType;
+    private static final class ProfileContainsTypeToPredicate implements Predicate<ResourceRecordSet<?>> {
+        private final Class<?> type;
 
-        private ConfigContainsTypeToPredicate(Class<?> configType) {
-            this.configType = checkNotNull(configType, "configType");
+        private ProfileContainsTypeToPredicate(Class<?> type) {
+            this.type = checkNotNull(type, "type");
         }
 
         @Override
         public boolean apply(ResourceRecordSet<?> input) {
             if (input == null)
                 return false;
-            if (input.getConfig().isEmpty())
+            if (input.getProfiles().isEmpty())
                 return false;
-            for (Map<String, Object> config : input.getConfig()) {
-                if (configType.isAssignableFrom(config.getClass()))
+            for (Map<String, Object> profile : input.getProfiles()) {
+                if (type.isAssignableFrom(profile.getClass()))
                     return true;
             }
             return false;
@@ -177,45 +177,45 @@ public class ResourceRecordSets {
 
         @Override
         public String toString() {
-            return "ConfigContainsTypeTo(" + configType + ")";
+            return "ProfileContainsTypeTo(" + type + ")";
         }
     }
 
     /**
-     * returns value of {@link ResourceRecordSet#getConfig() config},
-     * if matches the input {@code configType} and is not null;
+     * returns value of {@link ResourceRecordSet#getProfiles() profile},
+     * if matches the input {@code type} and is not null;
      * 
-     * @param configType
-     *            expected type of configuration
+     * @param type
+     *            expected type of profile
      */
-    public static <C extends Map<String, Object>> Function<ResourceRecordSet<?>, C> toConfig(
-            Class<C> configType) {
-        return new ToConfigFunction<C>(configType);
+    public static <C extends Map<String, Object>> Function<ResourceRecordSet<?>, C> toProfile(
+            Class<C> type) {
+        return new ToProfileFunction<C>(type);
     }
 
-    private static final class ToConfigFunction<C> implements Function<ResourceRecordSet<?>, C> {
-        private final Class<C> configType;
+    private static final class ToProfileFunction<C> implements Function<ResourceRecordSet<?>, C> {
+        private final Class<C> type;
 
-        private ToConfigFunction(Class<C> configType) {
-            this.configType = checkNotNull(configType, "configType");
+        private ToProfileFunction(Class<C> type) {
+            this.type = checkNotNull(type, "type");
         }
 
         @Override
         public C apply(ResourceRecordSet<?> input) {
             if (input == null)
                 return null;
-            if (input.getConfig().isEmpty())
+            if (input.getProfiles().isEmpty())
                 return null;
-            for (Map<String, Object> config : input.getConfig()) {
-                if (configType.isAssignableFrom(config.getClass()))
-                    return configType.cast(config);
+            for (Map<String, Object> profile : input.getProfiles()) {
+                if (type.isAssignableFrom(profile.getClass()))
+                    return type.cast(profile);
             }
             return null;
         }
 
         @Override
         public String toString() {
-            return "ToConfig(" + configType + ")";
+            return "ToProfile(" + type + ")";
         }
     }
 

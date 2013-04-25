@@ -2,13 +2,13 @@ package denominator.model;
 
 import static denominator.model.ResourceRecordSets.a;
 import static denominator.model.ResourceRecordSets.cname;
-import static denominator.model.ResourceRecordSets.configContainsType;
+import static denominator.model.ResourceRecordSets.profileContainsType;
 import static denominator.model.ResourceRecordSets.ns;
 import static denominator.model.ResourceRecordSets.ptr;
 import static denominator.model.ResourceRecordSets.spf;
-import static denominator.model.ResourceRecordSets.toConfig;
+import static denominator.model.ResourceRecordSets.toProfile;
 import static denominator.model.ResourceRecordSets.txt;
-import static denominator.model.ResourceRecordSets.withoutConfig;
+import static denominator.model.ResourceRecordSets.withoutProfile;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
@@ -21,9 +21,10 @@ import org.testng.annotations.Test;
 import com.google.common.collect.ForwardingMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 
-import denominator.model.config.Geo;
+import denominator.model.profile.Geo;
 import denominator.model.rdata.AData;
 import denominator.model.rdata.CNAMEData;
 import denominator.model.rdata.NSData;
@@ -80,45 +81,45 @@ public class ResourceRecordSetsTest {
         assertTrue(ResourceRecordSets.containsRData(ImmutableMap.of("address", "192.0.2.1")).apply(aRRS));
     }
 
-    Geo geo = Geo.create("US-East", ImmutableList.of("US-MD", "US-VA"));
+    Geo geo = Geo.create("US-East", ImmutableMultimap.of("US", "US-VA"));
 
     ResourceRecordSet<AData> geoRRS = ResourceRecordSet.<AData> builder()
                                                        .name("www.denominator.io.")
                                                        .type("A")
                                                        .ttl(3600)
                                                        .add(AData.create("1.1.1.1"))
-                                                       .addConfig(geo).build();
+                                                       .addProfile(geo).build();
 
-    public void withoutConfigReturnsFalseOnNull() {
-        assertFalse(withoutConfig().apply(null));
+    public void withoutProfileReturnsFalseOnNull() {
+        assertFalse(withoutProfile().apply(null));
     }
 
-    public void withoutConfigReturnsFalseWhenConfigNotEmpty() {
-        assertFalse(withoutConfig().apply(geoRRS));
+    public void withoutProfileReturnsFalseWhenProfileNotEmpty() {
+        assertFalse(withoutProfile().apply(geoRRS));
     }
 
-    public void withoutConfigReturnsTrueWhenConfigEmpty() {
-        assertTrue(withoutConfig().apply(aRRS));
+    public void withoutProfileReturnsTrueWhenProfileEmpty() {
+        assertTrue(withoutProfile().apply(aRRS));
     }
 
-    public void configContainsTypeReturnsFalseOnNull() {
-        assertFalse(configContainsType(Geo.class).apply(null));
+    public void profileContainsTypeReturnsFalseOnNull() {
+        assertFalse(profileContainsType(Geo.class).apply(null));
     }
 
-    public void configContainsTypeReturnsFalseOnDifferentType() {
-        assertFalse(configContainsType(String.class).apply(geoRRS));
+    public void profileContainsTypeReturnsFalseOnDifferentType() {
+        assertFalse(profileContainsType(String.class).apply(geoRRS));
     }
 
-    public void configContainsTypeReturnsFalseOnAbsent() {
-        assertFalse(configContainsType(Geo.class).apply(aRRS));
+    public void profileContainsTypeReturnsFalseOnAbsent() {
+        assertFalse(profileContainsType(Geo.class).apply(aRRS));
     }
 
-    public void configContainsTypeReturnsTrueOnSameType() {
-        assertTrue(configContainsType(Geo.class).apply(geoRRS));
+    public void profileContainsTypeReturnsTrueOnSameType() {
+        assertTrue(profileContainsType(Geo.class).apply(geoRRS));
     }
 
-    public void toConfigReturnsNullOnNull() {
-        assertEquals(toConfig(Geo.class).apply(null), null);
+    public void toProfileReturnsNullOnNull() {
+        assertEquals(toProfile(Geo.class).apply(null), null);
     }
 
     static final class Foo extends ForwardingMap<String, Object> {
@@ -130,16 +131,16 @@ public class ResourceRecordSetsTest {
 
     }
 
-    public void toConfigReturnsNullOnDifferentType() {
-        assertEquals(toConfig(Foo.class).apply(geoRRS), null);
+    public void toProfileReturnsNullOnDifferentType() {
+        assertEquals(toProfile(Foo.class).apply(geoRRS), null);
     }
 
-    public void toConfigReturnsNullOnAbsent() {
-        assertEquals(toConfig(Geo.class).apply(aRRS), null);
+    public void toProfileReturnsNullOnAbsent() {
+        assertEquals(toProfile(Geo.class).apply(aRRS), null);
     }
 
-    public void toConfigReturnsConfigOnSameType() {
-        assertEquals(toConfig(Geo.class).apply(geoRRS), geo);
+    public void toProfileReturnsProfileOnSameType() {
+        assertEquals(toProfile(Geo.class).apply(geoRRS), geo);
     }
 
     @DataProvider(name = "a")

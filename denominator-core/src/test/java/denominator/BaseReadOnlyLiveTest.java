@@ -102,7 +102,7 @@ public abstract class BaseReadOnlyLiveTest extends BaseProviderLiveTest {
                 }
             });
 
-    private ReadOnlyResourceRecordSetApi roApi(String zoneName) {
-        return manager.getApi().getReadOnlyResourceRecordSetApiForZone(zoneName);
+    private AllProfileResourceRecordSetApi roApi(String zoneName) {
+        return manager.getApi().getAllProfileResourceRecordSetApiForZone(zoneName);
     }
 }

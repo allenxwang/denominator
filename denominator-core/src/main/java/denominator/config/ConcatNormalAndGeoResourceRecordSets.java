@@ -7,15 +7,14 @@ import java.util.Iterator;
 import javax.inject.Singleton;
 
 import com.google.common.base.Optional;
-import com.google.common.collect.ImmutableSet;
 
 import dagger.Module;
 import dagger.Provides;
+import denominator.AllProfileResourceRecordSetApi;
 import denominator.DNSApiManager;
-import denominator.GeoResourceRecordSetApi;
-import denominator.ReadOnlyResourceRecordSetApi;
 import denominator.ResourceRecordSetApi;
 import denominator.model.ResourceRecordSet;
+import denominator.profile.GeoResourceRecordSetApi;
 
 /**
  * Used when normal and geo resource record sets are distinct in the backend.
@@ -25,12 +24,12 @@ public class ConcatNormalAndGeoResourceRecordSets {
 
     @Provides
     @Singleton
-    ReadOnlyResourceRecordSetApi.Factory provideResourceRecordSetApiFactory(final ResourceRecordSetApi.Factory factory,
+    AllProfileResourceRecordSetApi.Factory provideResourceRecordSetApiFactory(final ResourceRecordSetApi.Factory factory,
             final GeoResourceRecordSetApi.Factory geoFactory) {
-        return new ReadOnlyResourceRecordSetApi.Factory() {
+        return new AllProfileResourceRecordSetApi.Factory() {
 
             @Override
-            public ReadOnlyResourceRecordSetApi create(String zoneName) {
+            public AllProfileResourceRecordSetApi create(String zoneName) {
                 return new ConcatNormalAndGeoResourceRecordSetApi(factory.create(zoneName), geoFactory.create(zoneName)
                         .get());
             }
@@ -38,7 +37,7 @@ public class ConcatNormalAndGeoResourceRecordSets {
         };
     }
 
-    private static class ConcatNormalAndGeoResourceRecordSetApi implements ReadOnlyResourceRecordSetApi {
+    private static class ConcatNormalAndGeoResourceRecordSetApi implements AllProfileResourceRecordSetApi {
         private final ResourceRecordSetApi api;
         private final GeoResourceRecordSetApi geoApi;
 
@@ -60,8 +59,10 @@ public class ConcatNormalAndGeoResourceRecordSets {
         @Override
         public Iterator<ResourceRecordSet<?>> listByNameAndType(String name, String type) {
             Optional<ResourceRecordSet<?>> rrs = api.getByNameAndType(name, type);
+            if (!geoApi.getSupportedTypes().contains(type))
+                return rrs.asSet().iterator();
             if (rrs.isPresent())
-                return concat(ImmutableSet.of(rrs.get()).iterator(), geoApi.listByNameAndType(name, type));
+                return concat(rrs.asSet().iterator(), geoApi.listByNameAndType(name, type));
             return geoApi.listByNameAndType(name, type);
         }
     }

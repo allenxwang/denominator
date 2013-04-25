@@ -5,9 +5,13 @@ import static com.google.common.base.Predicates.alwaysTrue;
 import static com.google.common.base.Predicates.equalTo;
 import static com.google.common.collect.Iterables.any;
 import static com.google.common.collect.Iterables.filter;
+import static com.google.common.collect.Multimaps.filterKeys;
+import static com.google.common.collect.Multimaps.index;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -23,34 +27,38 @@ import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Multimap;
 
-import denominator.GeoResourceRecordSetApi;
 import denominator.model.ResourceRecordSet;
 import denominator.model.ResourceRecordSet.Builder;
-import denominator.model.config.Geo;
+import denominator.model.profile.Geo;
+import denominator.profile.GeoResourceRecordSetApi;
 
-public final class DynECTGeoResourceRecordSetApi implements denominator.GeoResourceRecordSetApi {
-    static final class Factory implements denominator.GeoResourceRecordSetApi.Factory {
-        private final DynECTApi api;
+public final class DynECTGeoResourceRecordSetApi implements GeoResourceRecordSetApi {
 
-        @Inject
-        Factory(DynECTApi api) {
-            this.api = api;
-        }
-
-        @Override
-        public Optional<GeoResourceRecordSetApi> create(String zoneName) {
-            checkNotNull(zoneName, "zoneName was null");
-            return Optional.<GeoResourceRecordSetApi> of(new DynECTGeoResourceRecordSetApi(api, zoneName));
-        }
-    }
-
+    private final Set<String> types;
+    private final Multimap<String, String> regions;
     private final DynECTApi api;
+    private final Function<String, String> countryToRegion;
     private final String zoneFQDN;
 
-    DynECTGeoResourceRecordSetApi(DynECTApi api, String zoneFQDN) {
+    DynECTGeoResourceRecordSetApi(Set<String> types, Multimap<String, String> regions, DynECTApi api,
+            Function<String, String> countryToRegion, String zoneFQDN) {
+        this.types = types;
+        this.regions = regions;
         this.api = api;
+        this.countryToRegion = countryToRegion;
         this.zoneFQDN = zoneFQDN;
+    }
+
+    @Override
+    public Set<String> getSupportedTypes() {
+        return types;
+    }
+
+    @Override
+    public Multimap<String, String> getSupportedRegions() {
+        return regions;
     }
 
     @Override
@@ -104,7 +112,7 @@ public final class DynECTGeoResourceRecordSetApi implements denominator.GeoResou
                   .transformAndConcat(toIterator(nodeFilter, geoGroupFilter, rsetFilter));
     }
 
-    private static Function<GeoService, Iterable<ResourceRecordSet<?>>> toIterator(
+    private Function<GeoService, Iterable<ResourceRecordSet<?>>> toIterator(
             final Predicate<Node> nodeFilter, final Predicate<GeoRegionGroup> groupFilter,
             final Predicate<RecordSet> rsetFilter) {
         return new Function<GeoService, Iterable<ResourceRecordSet<?>>>() {
@@ -114,13 +122,22 @@ public final class DynECTGeoResourceRecordSetApi implements denominator.GeoResou
                 ImmutableList.Builder<ResourceRecordSet<?>> toReturn = ImmutableList.builder();
                 Iterable<Node> nodes = filter(input.getNodes(), nodeFilter);
                 for (GeoRegionGroup group : filter(input.getGroups(), groupFilter)) {
-                    Geo geo = Geo.create(group.getName(), group.getCountries());
+                    Multimap<String, String> indexedGroups = indexByRegion(group.getCountries());
+                    Geo geo = Geo.create(group.getName(), indexedGroups);
                     toReturn.addAll(FluentIterable.from(group.getRecordSets())
                                                   .filter(rsetFilter)
                                                   .transform(toResourceRecordSetBuilder(geo))
                                                   .transformAndConcat(buildForEachNodeFQDN(nodes)));
                 }
                 return toReturn.build();
+            }
+
+            private Multimap<String, String> indexByRegion(List<String> countries) {
+                // special case the "all countries" condition
+                if (countries.size() == 1 && regions.containsKey(countries.get(0))) {
+                    return filterKeys(regions, equalTo(countries.get(0)));
+                }
+                return index(countries, countryToRegion);
             }
         };
     }
@@ -170,7 +187,8 @@ public final class DynECTGeoResourceRecordSetApi implements denominator.GeoResou
         };
     }
 
-    private static Function<RecordSet, ResourceRecordSet.Builder<Map<String, Object>>> toResourceRecordSetBuilder(Geo geo){
+    private static Function<RecordSet, ResourceRecordSet.Builder<Map<String, Object>>> toResourceRecordSetBuilder(
+            Geo geo) {
         return new ToResourceRecordSetBuilder(geo);
     }
 
@@ -197,7 +215,7 @@ public final class DynECTGeoResourceRecordSetApi implements denominator.GeoResou
             for (Value val : in) {
                 builder.add(val.getRData());
             }
-            builder.addConfig(geo);
+            builder.addProfile(geo);
             return builder;
         }
 
@@ -207,8 +225,7 @@ public final class DynECTGeoResourceRecordSetApi implements denominator.GeoResou
         return new BuildForEachNodeFQDN(nodes);
     }
 
-    private static class BuildForEachNodeFQDN
-            implements
+    private static class BuildForEachNodeFQDN implements
             Function<ResourceRecordSet.Builder<Map<String, Object>>, Iterable<ResourceRecordSet<Map<String, Object>>>> {
         private BuildForEachNodeFQDN(Iterable<Node> nodes) {
             this.nodes = nodes;
@@ -224,6 +241,30 @@ public final class DynECTGeoResourceRecordSetApi implements denominator.GeoResou
                 rrsets.add(in.name(node.getFQDN()).build());
             }
             return rrsets.build();
+        }
+    }
+
+    static final class Factory implements GeoResourceRecordSetApi.Factory {
+        private final Set<String> types;
+        private final Multimap<String, String> regions;
+        private final DynECTApi api;
+        private final Function<String, String> countryToRegion;
+
+        @Inject
+        Factory(@denominator.config.profile.Geo Set<String> types,
+                @denominator.config.profile.Geo Multimap<String, String> regions, DynECTApi api,
+                @denominator.config.profile.Geo Function<String, String> countryToRegion) {
+            this.types = types;
+            this.regions = regions;
+            this.api = api;
+            this.countryToRegion = countryToRegion;
+        }
+
+        @Override
+        public Optional<GeoResourceRecordSetApi> create(String zoneName) {
+            checkNotNull(zoneName, "zoneName was null");
+            return Optional.<GeoResourceRecordSetApi> of(
+                    new DynECTGeoResourceRecordSetApi(types,regions, api, countryToRegion, zoneName));
         }
     }
 }

@@ -21,7 +21,7 @@ import com.google.common.primitives.UnsignedInteger;
  * 
  * @param <D>
  *            RData type shared across elements. This may be empty in the case
- *            of special configuration such as `alias`.
+ *            of special profile such as `alias`.
  * 
  * @see <a href="http://www.ietf.org/rfc/rfc1035.txt">RFC 1035</a>
  */
@@ -31,11 +31,11 @@ public class ResourceRecordSet<D extends Map<String, Object>> extends Forwarding
     private final String type;
     private final Optional<Integer> ttl;
     private final ImmutableList<D> rdata;
-    private final ImmutableList<Map<String, Object>> config;
+    private final ImmutableList<Map<String, Object>> profiles;
 
-    @ConstructorProperties({ "name", "type", "ttl", "rdata", "config" })
+    @ConstructorProperties({ "name", "type", "ttl", "rdata", "profiles" })
     ResourceRecordSet(String name, String type, Optional<Integer> ttl, ImmutableList<D> rdata,
-            ImmutableList<Map<String, Object>> config) {
+            ImmutableList<Map<String, Object>> profiles) {
         this.name = checkNotNull(name, "name");
         checkArgument(name.length() <= 255, "Name must be limited to 255 characters"); 
         this.type = checkNotNull(type, "type of %s", name);
@@ -43,7 +43,7 @@ public class ResourceRecordSet<D extends Map<String, Object>> extends Forwarding
         checkArgument(UnsignedInteger.fromIntBits(this.ttl.or(0)).longValue() <= 0x7FFFFFFFL, // Per RFC 2181 
                 "Invalid ttl value: %s, must be 0-2147483647", this.ttl);
         this.rdata = checkNotNull(rdata, "rdata of %s", name);
-        this.config = checkNotNull(config, "config of %s", name);
+        this.profiles = checkNotNull(profiles, "profiles of %s", name);
     }
 
     /**
@@ -70,18 +70,18 @@ public class ResourceRecordSet<D extends Map<String, Object>> extends Forwarding
     }
 
     /**
-     * server-side configuration of the record set, often used to decide if this
-     * record set is visible to a client or not. If empty, this is a normal
-     * record, visible to all resolvers.
+     * server-side profiles of the record set, often controls visibility based on
+     * client origin, latency or server health. If empty, this is a normal record,
+     * visible to all resolvers.
      * 
-     * For example, if this record set is intended for resolvers in Utah, config
-     * will include a Map whose entries include {@code configType -> "geo"}, and
-     * is an instance of {@link denominator.model.config.Geo}, where
-     * {@link denominator.model.config.Geo#getTerritories()} contains something
+     * For example, if this record set is intended for resolvers in Utah,
+     * profiles will include a Map whose entries include {@code type -> "geo"},
+     * and is an instance of {@link denominator.model.profile.Geo}, where
+     * {@link denominator.model.profile.Geo#getRegions()} contains something
      * like `Utah` or `US-UT`.
      */
-    public ImmutableList<Map<String, Object>> getConfig() {
-        return config;
+    public ImmutableList<Map<String, Object>> getProfiles() {
+        return profiles;
     }
 
     @Override
@@ -91,7 +91,7 @@ public class ResourceRecordSet<D extends Map<String, Object>> extends Forwarding
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(name, type, rdata, config);
+        return Objects.hashCode(name, type, rdata, profiles);
     }
 
     @Override
@@ -102,7 +102,7 @@ public class ResourceRecordSet<D extends Map<String, Object>> extends Forwarding
             return false;
         ResourceRecordSet<?> that = ResourceRecordSet.class.cast(obj);
         return equal(this.name, that.name) && equal(this.type, that.type) && equal(this.rdata, that.rdata)
-                && equal(this.config, that.config);
+                && equal(this.profiles, that.profiles);
     }
 
     @Override
@@ -112,7 +112,7 @@ public class ResourceRecordSet<D extends Map<String, Object>> extends Forwarding
                                    .add("type", type)
                                    .add("ttl", ttl.orNull())
                                    .add("rdata", rdata.isEmpty() ? null : rdata)
-                                   .add("config", config.isEmpty() ? null : config).toString();
+                                   .add("profiles", profiles.isEmpty() ? null : profiles).toString();
     }
 
     public static <D extends Map<String, Object>> Builder<D> builder() {

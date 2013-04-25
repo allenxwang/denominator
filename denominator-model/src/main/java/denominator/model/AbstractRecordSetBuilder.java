@@ -20,7 +20,7 @@ abstract class AbstractRecordSetBuilder<E, D extends Map<String, Object>, B exte
     private String name;
     private String type;
     private Optional<Integer> ttl = Optional.absent();
-    private ImmutableList.Builder<Map<String, Object>> config = ImmutableList.builder();
+    private ImmutableList.Builder<Map<String, Object>> profile = ImmutableList.builder();
 
     /**
      * @see ResourceRecordSet#getName()
@@ -55,42 +55,42 @@ abstract class AbstractRecordSetBuilder<E, D extends Map<String, Object>, B exte
      * ex.
      * 
      * <pre>
-     * builder.addConfig(geo);
+     * builder.addProfile(geo);
      * </pre>
      */
     @SuppressWarnings("unchecked")
-    public B addConfig(Map<String, Object> config) {
-        this.config.add(checkNotNull(config, "config"));
+    public B addProfile(Map<String, Object> profile) {
+        this.profile.add(checkNotNull(profile, "profile"));
         return (B) this;
     }
 
     /**
-     * adds config values in the builder
+     * adds profile values in the builder
      * 
      * ex.
      * 
      * <pre>
      * 
-     * builder.addAllConfig(otherConfig);
+     * builder.addAllProfile(otherProfile);
      * </pre>
      */
     @SuppressWarnings("unchecked")
-    public B addAllConfig(Iterable<Map<String, Object>> config) {
-        this.config.addAll(checkNotNull(config, "config"));
+    public B addAllProfile(Iterable<Map<String, Object>> profile) {
+        this.profile.addAll(checkNotNull(profile, "profile"));
         return (B) this;
     }
 
     /**
-     * @see ResourceRecordSetWithConfig#getConfig()
+     * @see ResourceRecordSet#getProfiles()
      */
     @SuppressWarnings("unchecked")
-    public B config(Iterable<Map<String, Object>> config) {
-        this.config = ImmutableList.<Map<String, Object>> builder().addAll(config);
+    public B profile(Iterable<Map<String, Object>> profile) {
+        this.profile = ImmutableList.<Map<String, Object>> builder().addAll(profile);
         return (B) this;
     }
 
     public ResourceRecordSet<D> build() {
-        return new ResourceRecordSet<D>(name, type, ttl, rdataValues(), config.build());
+        return new ResourceRecordSet<D>(name, type, ttl, rdataValues(), profile.build());
     }
 
     /**

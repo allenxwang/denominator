@@ -4,7 +4,6 @@ import static com.google.common.collect.Iterators.peekingIterator;
 import static denominator.ultradns.UltraDNSFunctions.forTypeAndRData;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 import javax.inject.Inject;
@@ -19,11 +18,12 @@ import com.google.common.base.Optional;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Multimap;
 import com.google.common.collect.PeekingIterator;
 
 import denominator.model.ResourceRecordSet;
 import denominator.model.ResourceRecordSet.Builder;
-import denominator.model.config.Geo;
+import denominator.model.profile.Geo;
 
 /**
  * Generally, this iterator will produce {@link ResourceRecordSet} for
@@ -38,11 +38,12 @@ import denominator.model.config.Geo;
 class GroupGeoRecordByNameTypeIterator implements Iterator<ResourceRecordSet<?>> {
 
     static final class Factory {
-        private final CacheLoader<String, List<String>> directionalGroupIdToTerritories;
+        private final CacheLoader<String, Multimap<String, String>> getDirectionalGroup;
 
         @Inject
-        private Factory(CacheLoader<String, List<String>> directionalGroupIdToTerritories) {
-            this.directionalGroupIdToTerritories = directionalGroupIdToTerritories;
+        private Factory(
+                @denominator.config.profile.Geo CacheLoader<String, Multimap<String, String>> getDirectionalGroup) {
+            this.getDirectionalGroup = getDirectionalGroup;
         }
 
         /**
@@ -50,22 +51,23 @@ class GroupGeoRecordByNameTypeIterator implements Iterator<ResourceRecordSet<?>>
          *            only contains records with the same
          *            {@link DirectionalPoolRecordDetail#getName()}, sorted by
          *            {@link DirectionalRecord#getType()},
-         *            {@link DirectionalPoolRecordDetail#getGeolocationGroup()} or
-         *            {@link DirectionalPoolRecordDetail#getGroup()}
+         *            {@link DirectionalPoolRecordDetail#getGeolocationGroup()}
+         *            or {@link DirectionalPoolRecordDetail#getGroup()}
          */
         Iterator<ResourceRecordSet<?>> create(Iterator<DirectionalPoolRecordDetail> sortedIterator) {
-            LoadingCache<String, List<String>> requestScopedGeoCache = CacheBuilder.newBuilder().build(
-                    directionalGroupIdToTerritories);
+            LoadingCache<String, Multimap<String, String>> requestScopedGeoCache = 
+                    CacheBuilder.newBuilder().build(getDirectionalGroup);
             return new GroupGeoRecordByNameTypeIterator(requestScopedGeoCache, sortedIterator);
         }
     }
 
-    private final Function<String, List<String>> directionalGroupIdToTerritories;
+    private final Function<String, Multimap<String, String>> getDirectionalGroup;
     private final PeekingIterator<DirectionalPoolRecordDetail> peekingIterator;
 
-    private GroupGeoRecordByNameTypeIterator(Function<String, List<String>> directionalGroupIdToTerritories,
+    private GroupGeoRecordByNameTypeIterator(
+            Function<String, Multimap<String, String>> getDirectionalGroup,
             Iterator<DirectionalPoolRecordDetail> sortedIterator) {
-        this.directionalGroupIdToTerritories = directionalGroupIdToTerritories;
+        this.getDirectionalGroup = getDirectionalGroup;
         this.peekingIterator = peekingIterator(sortedIterator);
     }
 
@@ -101,8 +103,8 @@ class GroupGeoRecordByNameTypeIterator implements Iterator<ResourceRecordSet<?>>
         builder.add(forTypeAndRData(record.getType(), record.getRData()));
 
         IdAndName directionalGroup = group(directionalRecord).get();
-        Geo config =  Geo.create(directionalGroup.getName(), 
-                                 directionalGroupIdToTerritories.apply(directionalGroup.getId()));
+        Geo profile =  Geo.create(directionalGroup.getName(), 
+                                 getDirectionalGroup.apply(directionalGroup.getId()));
         
         while (hasNext()) {
             DirectionalPoolRecordDetail next = peekingIterator.peek();
@@ -113,7 +115,7 @@ class GroupGeoRecordByNameTypeIterator implements Iterator<ResourceRecordSet<?>>
                 break;
             }
         }
-        return builder.addConfig(config).build();
+        return builder.addProfile(profile).build();
     }
 
     @Override
